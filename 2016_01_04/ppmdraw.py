@@ -21,7 +21,7 @@ class Colour(object):
 		self.b = b
 
 	def show(self):
-		print('{0:3d} {1:3d} {2:3d}'.format(self.r, self.b, self.g), end="")
+		print('{0:3d} {1:3d} {2:3d}'.format(self.r, self.g, self.b), end="")
 
 class Shape(object):
 	def __init__(self, origin, colour):
@@ -42,7 +42,7 @@ class Line(Shape):
 
 	def draw(self, canvas):
 		if (self.end.x == self.origin.x):
-			slope = 1
+			slope = 1 if self.origin.y <= self.end.y else -1
 		else:
 			slope = (self.end.y - self.origin.y) / (self.end.x - self.origin.x)
 		self.drawBySlope(canvas, slope, self.origin)
@@ -58,6 +58,17 @@ class Line(Shape):
 			canvas.setPoint(startPoint, self.colour)
 			self.drawBySlope(canvas, slope, self.end)
 			return
+
+		# horizontal and vertical lines are easy
+		if (slope == 0):
+			canvas.setPoint(startPoint, self.colour)
+			direction = 1 if startPoint.x <= self.end.x else -1
+			nextPoint = Coordinate(startPoint.x + direction, startPoint.y)
+			self.drawBySlope(canvas, slope, nextPoint)
+		if (abs(slope) == 1):
+			canvas.setPoint(startPoint, self.colour)
+			nextPoint = Coordinate(startPoint.x, startPoint.y + slope) 
+			self.drawBySlope(canvas, slope, nextPoint)
 
 class Canvas(object):
 	def __init__(self, col, row):
@@ -97,3 +108,27 @@ if __name__ == '__main__':
 
 	testLine[1].draw(canvas)
 	canvas.show()
+	print('')
+	print('')
+
+	canvas = Canvas(7, 7)
+	testLine = (Line(Coordinate(1,1),Coordinate(1,6),Colour(0,255,0)),Line(Coordinate(0,2),Coordinate(6,2),Colour(0,0,255)),Line(Coordinate(5,4),Coordinate(1,4),Colour(255,0,0)),Line(Coordinate(5,6),Coordinate(5,1),Colour(255,255,0)))
+	testLine[0].draw(canvas)
+	canvas.show()
+	print('')
+	print('')
+
+	testLine[1].draw(canvas)
+	canvas.show()
+	print('')
+	print('')
+
+	testLine[2].draw(canvas)
+	canvas.show()
+	print('')
+	print('')
+
+	testLine[3].draw(canvas)
+	canvas.show()
+	print('')
+	print('')
