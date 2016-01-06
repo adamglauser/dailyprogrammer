@@ -15,6 +15,9 @@ class Colour(object):
 		self.g = g
 		self.b = b
 
+	def show(self):
+		print('{0:3d} {1:3d} {2:3d}'.format(self.r, self.b, self.g), end="")
+
 class Shape(object):
 	def __init__(self, origin, colour):
 		self.origin = origin
@@ -24,9 +27,25 @@ class Shape(object):
 		print("Shape")
 
 class Point(Shape):
-	def draw(self):
-		print('A {0:d},{1:d},{2:d} point at {3:d},{4:d}.'.format(self.colour.r,self.colour.g,self.colour.b,self.origin.x, self.origin.y))
+	def draw(self, canvas):
+		canvas.setPoint(self.origin, self.colour)
+
+class Canvas(object):
+	def __init__(self, col, row):
+		self.grid = [[Colour(0,0,0) for x in range(col)] for x in range(row)]
+
+	def setPoint(self, point, colour):
+		self.grid[point.x][point.y] = colour
+
+	def show(self):
+		for row in self.grid:
+			for col in row:
+				col.show()
+				print('   ', end="")
+			print('')
 
 if __name__ == '__main__':
-	testPoint = Point(Coordinate(5,5),Colour(255,0,0))
-	testPoint.draw()
+	canvas = Canvas(2,2)
+	testPoint = Point(Coordinate(0,1),Colour(255,0,0))
+	testPoint.draw(canvas)
+	canvas.show()
