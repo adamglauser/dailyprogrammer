@@ -44,6 +44,7 @@ class Line(Shape):
 	def draw(self, canvas):
 		self.drawBySlope(canvas, None, self.origin)
 
+	# A line drawing algorithm of my own design
 	def drawBySlope(self, canvas, slope, startPoint):
 		canvas.setPoint(startPoint, self.colour)
 		slope = Line.getSlope(self.origin, self.end)
@@ -109,6 +110,16 @@ class Line(Shape):
 
 		return slope
 
+class Rectangle(Shape):
+	def __init__(self, origin, height, width, colour):
+		super(Rectangle, self).__init__(origin, colour)
+		self.height = height
+		self.width = width
+
+	def draw(self, canvas):
+		for i in range(self.height):
+			Line(Coordinate(self.origin.x + i, self.origin.y), Coordinate(self.origin.x + i, self.origin.y + self.width - 1), self.colour).draw(canvas)
+
 class Canvas(object):
 	def __init__(self, col, row):
 		self.grid = [[Colour(0,0,0) for x in range(col)] for x in range(row)]
@@ -122,6 +133,16 @@ class Canvas(object):
 				col.show()
 				print('   ', end="")
 			print('')
+
+	def writePPM(self, eol, colPad):
+		print('P3 ', end=eol)
+		print('{0:d} {1:d}'.format(len(self.grid[0]), len(self.grid)), end=eol)
+		for row in self.grid:
+			for col in row:
+				col.show()
+				print(' ' * colPad, end='')
+			if (not (eol == '')):
+				print ('', end=eol)
 
 	@staticmethod
 	def areAdjacent(p1, p2):
@@ -200,3 +221,18 @@ if __name__ == '__main__':
 	canvas.show()
 	print('')
 	print('')
+
+	print('Test rectangles')
+	canvas = Canvas(8, 7)
+	testLine = (
+		Rectangle(Coordinate(0, 0), 2, 2,Colour(0, 255, 0)),
+		Rectangle(Coordinate(3, 0), 3, 4, Colour(0, 0, 255)))
+	#pdb.set_trace()
+	testLine[0].draw(canvas)
+	canvas.show()
+	print('')
+	print('')
+
+	testLine[1].draw(canvas)
+	canvas.writePPM('\n', 1)
+	canvas.writePPM('', 1)
