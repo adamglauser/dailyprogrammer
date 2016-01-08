@@ -42,41 +42,58 @@ class Line(Shape):
 		self.end = end
 
 	def draw(self, canvas):
-		self.drawBySlope(canvas, None, self.origin)
+		# drawing "backward" to simplify determination of next point to draw
+		if (self.origin.y <= self.end.y):
+			self.drawBySlope(canvas, None, self.origin, self.end)
+		else:
+			self.drawBySlope(canvas, None, self.end, self.origin)
 
 	# A line drawing algorithm of my own design
-	def drawBySlope(self, canvas, slope, startPoint):
+        # For simplicity, assumes that startPoint.y <= endPoint.y
+        #   Lines for which this is not true can simply be drawn in reverse
+        # Start by drawing the start point of the line
+        #   Unless we are at or adjacent to the end point, pick the next
+        #   point by minimizing the difference between the slope of what we've drawn so far
+        #   and the slope of the desired line
+	def drawBySlope(self, canvas, slope, startPoint, endPoint):
 		canvas.setPoint(startPoint, self.colour)
-		slope = Line.getSlope(self.origin, self.end)
-		if (startPoint == self.end):
-			canvas.setPoint(startPoint, self.colour)
+		if (startPoint == endPoint):
 			return
 
 		# if the startPoint is adjacent to the end point, we can just
-		#  fill it in then draw a line on the end point
-		if (Canvas.areAdjacent(startPoint, self.end)):
-			self.drawBySlope(canvas, slope, self.end)
+		#  fill in the end point and be done
+		if (Canvas.areAdjacent(startPoint, endPoint)):
+			canvas.setPoint(endPoint, self.colour)
 			return
 
 		# horizontal and vertical lines are easy
+		slope = Line.getSlope(self.origin, self.end)
+		xDirection = 1 if startPoint.x <= self.end.x else -1
 		if (slope == 0):
-			direction = 1 if startPoint.x <= self.end.x else -1
-			nextPoint = Coordinate(startPoint.x + direction, startPoint.y)
-			self.drawBySlope(canvas, slope, nextPoint)
+			nextPoint = Coordinate(startPoint.x + xDirection, startPoint.y)
+			self.drawBySlope(canvas, slope, nextPoint, endPoint)
 			return
 		if (slope == None):
-			yDirection = 1 if startPoint.y <= self.end.y else -1
-			nextPoint = Coordinate(startPoint.x, startPoint.y + yDirection) 
-			self.drawBySlope(canvas, slope, nextPoint)
+			nextPoint = Coordinate(startPoint.x, startPoint.y + 1) 
+			self.drawBySlope(canvas, slope, nextPoint, endPoint)
 			return
 
+		# in case we don't quite hit the end point, abort if line goes 
+                #  past end point to avoid infinite loop
+		if ((xDirection > 0 and startPoint.x > endPoint.x) 
+				or (xDirection < 0 and startPoint.x < endPoint.x) 
+				or (startPoint.y > endPoint.y) 
+				):
+			self.drawBySlope(canvas, slope, endPoint, endPoint)
+			return
 
 		# depending on the quadrant the line is in, only three possible points could be next on the line
 		# figure out which three depending on line direction, then choose the one that will result in a line
 		# with the slope closest to the final line
-		xDirection = 1 if startPoint.x <= self.end.x else -1
-		yDirection = 1 if startPoint.y <= self.end.y else -1
-		candidate = (Coordinate(startPoint.x, startPoint.y + yDirection),Coordinate(startPoint.x + xDirection, startPoint.y),Coordinate(startPoint.x + xDirection, startPoint.y + yDirection))
+		candidate = (
+			Coordinate(startPoint.x, startPoint.y + 1),
+			Coordinate(startPoint.x + xDirection, startPoint.y),
+			Coordinate(startPoint.x + xDirection, startPoint.y + 1))
 
 		closestSlope = None
 		closestCandidateIndex = None
@@ -86,16 +103,8 @@ class Line(Shape):
 			if (closestSlope is None or abs(newSlope[i] - slope) < abs(closestSlope - slope)):
 				closestSlope = newSlope[i]
 				closestCandidateIndex = i
-
-		# in case my algorithm doesn't work well, to avoid infinite loop
-		if ((xDirection > 0 and candidate[closestCandidateIndex].x > self.end.x) 
-				or (xDirection < 0 and candidate[closestCandidateIndex].x < self.end.x) 
-				or (yDirection > 0 and candidate[closestCandidateIndex].y > self.end.y) 
-				or (yDirection < 0 and candidate[closestCandidateIndex].y < self.end.y)
-				):
-			self.drawBySlope(canvas, slope, self.end)
 		else:
-			self.drawBySlope(canvas, slope, candidate[closestCandidateIndex])
+			self.drawBySlope(canvas, slope, candidate[closestCandidateIndex], endPoint)
 		
 	@staticmethod
 	def getSlope(p1, p2):
